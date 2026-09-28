@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d5c4b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Leads">
+  <meta name="robots" content="noindex">
+  <title>Lead Scanner</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="vendor/jsQR.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="view-title">Leads</h1>
+    <a id="event-label" class="event-label" href="#settings"></a>
+    <span id="offline-badge" class="offline-badge" hidden>Offline</span>
+  </header>
+
+  <main>
+    <!-- Lead list -->
+    <section id="view-leads" class="view">
+      <div id="setup-banner" class="banner warn" hidden>
+        Create an event in <a href="#settings">Settings</a> before capturing leads. Every lead is attributed to it.
+      </div>
+      <div id="draft-banner" class="banner" hidden>
+        You have an unsaved lead. <a href="#new">Continue editing</a>
+      </div>
+      <div id="export-banner" class="banner export-banner">
+        <span><strong id="unexported-count">0</strong> <span id="unexported-word">leads</span> not exported yet</span>
+        <a class="btn small" href="#export">Export</a>
+      </div>
+
+      <div class="actions capture">
+        <a class="btn primary big" href="#scan">Scan QR</a>
+        <a class="btn big" href="#new">+ Type in</a>
+      </div>
+
+      <div class="list-tools">
+        <select id="list-event" aria-label="Show leads from event"></select>
+        <input id="search" class="search" type="search" placeholder="Search" autocomplete="off">
+      </div>
+      <ul id="lead-list" class="lead-list"></ul>
+      <p id="empty-list" class="muted center">No leads yet.</p>
+    </section>
+
+    <!-- QR scanner -->
+    <section id="view-scan" class="view" hidden>
+      <div class="scanner">
+        <video id="scan-video" playsinline muted></video>
+        <div class="scan-frame" aria-hidden="true"></div>
+      </div>
+      <p id="scan-status" class="muted center">Point the camera at the QR code.</p>
+      <div class="actions column">
+        <label class="btn">
+          Take a photo of the QR code instead
+          <input id="scan-photo" type="file" accept="image/*" capture="environment" hidden>
+        </label>
+        <a class="btn ghost" href="#leads">Cancel</a>
+      </div>
+    </section>
+
+    <!-- Lead form: every capture mode ends here for review -->
+    <section id="view-form" class="view" hidden>
+      <div id="form-notice" class="banner" hidden></div>
+      <ul id="form-hints" class="warnings"></ul>
+      <form id="lead-form" novalidate autocomplete="off">
+        <label class="field">
+          <span>Company <em>required</em></span>
+          <input name="company" type="text" autocapitalize="words">
+        </label>
+
+        <fieldset class="field">
+          <legend>Company type</legend>
+          <div class="segmented" id="type-options"></div>
+        </fieldset>
+
+        <label class="field">
+          <span>Full name <small>exactly as printed</small></span>
+          <input name="full_name" type="text" autocapitalize="words">
+        </label>
+
+        <label class="field">
+          <span>Position</span>
+          <input name="position" type="text">
+        </label>
+
+        <div class="field">
+          <span class="label">Emails</span>
+          <div id="email-rows" class="rows"></div>
+          <button type="button" class="btn small ghost" id="add-email">+ Email</button>
+        </div>
+
+        <div class="field">
+          <span class="label">Phones</span>
+          <div id="phone-rows" class="rows"></div>
+          <button type="button" class="btn small ghost" id="add-phone">+ Phone</button>
+        </div>
+
+        <label class="field">
+          <span>Website</span>
+          <input name="website" type="url" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="www.example.com">
+        </label>
+
+        <label class="field">
+          <span>Country</span>
+          <input name="country" type="text" list="country-list" autocapitalize="words">
+          <datalist id="country-list"></datalist>
+        </label>
+
+        <label class="field">
+          <span>City</span>
+          <input name="city" type="text" autocapitalize="words">
+        </label>
+
+        <details class="more">
+          <summary>Address and domain</summary>
+          <label class="field">
+            <span>Street</span>
+            <input name="street" type="text">
+          </label>
+          <div class="two">
+            <label class="field">
+              <span>ZIP</span>
+              <input name="zip" type="text">
+            </label>
+            <label class="field">
+              <span>Region</span>
+              <input name="region" type="text">
+            </label>
+          </div>
+          <label class="field">
+            <span>Domain <small>optional, overrides the website's</small></span>
+            <input name="domain" type="text" autocapitalize="off" spellcheck="false" placeholder="example.com">
+          </label>
+        </details>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea name="notes" rows="4"></textarea>
+        </label>
+
+        <div class="two">
+          <label class="field">
+            <span>Event</span>
+            <select name="event_id" id="form-event"></select>
+          </label>
+          <label class="field">
+            <span>Captured by</span>
+            <select name="captured_by" id="captured-by"></select>
+          </label>
+        </div>
+
+        <details class="more" id="raw-qr-box" hidden>
+          <summary>QR code content</summary>
+          <pre id="raw-qr" class="raw"></pre>
+        </details>
+
+        <ul id="form-warnings" class="warnings"></ul>
+        <p id="form-meta" class="muted small"></p>
+
+        <div class="actions sticky">
+          <button type="button" class="btn ghost" id="form-cancel">Cancel</button>
+          <button type="submit" class="btn primary">Save lead</button>
+        </div>
+        <button type="button" class="btn danger ghost full" id="form-delete" hidden>Delete this lead</button>
+      </form>
+    </section>
+
+    <!-- Export -->
+    <section id="view-export" class="view" hidden>
+      <p class="lead-in">Leads are stored only on this phone. Export often: clearing browser data or losing the phone loses anything not exported.</p>
+
+      <label class="field">
+        <span>Event</span>
+        <select id="export-event"></select>
+      </label>
+
+      <fieldset class="field">
+        <legend>Which leads</legend>
+        <label class="radio"><input type="radio" name="scope" value="new" checked> Not exported yet (<span id="count-new">0</span>)</label>
+        <label class="radio"><input type="radio" name="scope" value="all"> All (<span id="count-all">0</span>)</label>
+      </fieldset>
+
+      <fieldset class="field">
+        <legend>Format</legend>
+        <label class="radio"><input type="radio" name="format" value="import" checked> CRM import <small>for Leads &rarr; Import</small></label>
+        <label class="radio"><input type="radio" name="format" value="full"> Full <small>everything captured, for reference</small></label>
+      </fieldset>
+
+      <label class="check"><input type="checkbox" id="mark-exported" checked> Mark these leads as exported</label>
+
+      <div class="actions">
+        <button type="button" class="btn primary" id="btn-download">Download CSV</button>
+        <button type="button" class="btn" id="btn-share" hidden>Share&hellip;</button>
+      </div>
+      <p id="export-result" class="muted" hidden></p>
+    </section>
+
+    <!-- Settings -->
+    <section id="view-settings" class="view" hidden>
+      <h2 class="first">Events</h2>
+      <p class="muted small">New leads are attributed to the active event. Its name becomes the lead source in the CRM, e.g. "Dairy Show 2026".</p>
+      <ul id="event-list" class="event-list"></ul>
+      <form id="event-form" class="event-form" novalidate autocomplete="off">
+        <label class="field">
+          <span>New event name</span>
+          <input name="name" type="text" placeholder="Dairy Show 2026">
+        </label>
+        <label class="field">
+          <span>Date <small>optional</small></span>
+          <input name="date" type="date">
+        </label>
+        <button type="submit" class="btn primary full">Create event and make it active</button>
+        <p id="event-error" class="error small" hidden></p>
+      </form>
+
+      <h2>People</h2>
+      <form id="settings-form" novalidate autocomplete="off">
+        <label class="field">
+          <span>People at the stand <small>one per line</small></span>
+          <textarea name="people" rows="4"></textarea>
+        </label>
+
+        <label class="field">
+          <span>This phone is used by</span>
+          <select name="capturedBy" id="settings-captured-by"></select>
+        </label>
+
+        <div class="actions">
+          <button type="submit" class="btn primary">Save people</button>
+        </div>
+        <p id="settings-saved" class="muted" hidden>Saved.</p>
+      </form>
+
+      <h2>Data on this phone</h2>
+      <p id="storage-info" class="muted small"></p>
+      <p class="muted small">On iPhone, add this page to the Home Screen (Share &rarr; Add to Home Screen) and open it from there. Safari can otherwise clear the site's data after 7 days without use.</p>
+      <div class="actions column">
+        <button type="button" class="btn ghost" id="btn-delete-exported">Delete exported leads</button>
+        <button type="button" class="btn danger ghost" id="btn-delete-all">Delete all leads</button>
+      </div>
+      <p class="muted small center" id="app-version"></p>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <a href="#leads" data-tab="leads">Leads</a>
+    <a href="#scan" data-tab="scan">Scan</a>
+    <a href="#export" data-tab="export">Export <span id="tab-badge" class="badge" hidden></span></a>
+    <a href="#settings" data-tab="settings">Settings</a>
+  </nav>
+
+  <template id="email-row">
+    <div class="row">
+      <input type="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="name@company.com" data-k="address">
+      <select data-k="type" aria-label="Email type">
+        <option value="personal">personal</option>
+        <option value="role">role</option>
+        <option value="company">company</option>
+      </select>
+      <button type="button" class="icon-btn" data-remove aria-label="Remove">&times;</button>
+    </div>
+  </template>
+
+  <template id="phone-row">
+    <div class="row">
+      <input type="tel" inputmode="tel" placeholder="+49 ..." data-k="phone">
+      <button type="button" class="icon-btn" data-remove aria-label="Remove">&times;</button>
+    </div>
+  </template>
+</body>
+</html>
