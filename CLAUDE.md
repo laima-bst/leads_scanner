@@ -156,6 +156,12 @@ lead was captured (manual / QR / card).
 - **Extra fields** (interest level, product interest, follow-up) will be reviewed
   by Laima in the next step.
 
+- **Business cards without AI (option C):** the phone's own text recognition copies
+  the card's text: Live Text "Scan Text" on iPhone, Google Lens on Android. The user
+  pastes it into one box, and `js/cardtext.js` sorts it into fields; the review form
+  is where corrections happen. No photo is stored. Leads captured this way have
+  `capture_method: card` and keep the pasted text in `card_text` (full export only).
+
 ## Suggested order of work
 
 1. Repo + Pages skeleton, a phone-first layout, settings (event, people, API key).

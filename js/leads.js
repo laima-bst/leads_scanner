@@ -108,6 +108,7 @@ export function blankLead() {
     event: '',            // event name at capture time, exported as lead_source
     capture_method: 'manual',
     raw_qr: '',
+    card_text: '',        // text copied from a business card
     exported_at: null,
     updated_at: null,
   };

@@ -268,4 +268,61 @@ h2.first { margin-top: 0; }
 .event-form .btn.full { margin-top: 0; }
 .event-label { text-decoration: none; }
 
+/* Capture tiles on the Leads screen */
+.actions.capture { gap: 10px; }
+.btn.tile { flex-direction: column; gap: 2px; min-height: 76px; margin-bottom: 10px; }
+.tile-title { font-size: 18px; }
+.tile-sub { font-size: 12.5px; font-weight: 500; opacity: 0.85; }
+.btn.type-in { margin: 0 0 16px; }
+
+/* Business card */
+.segmented.small { margin-bottom: 14px; }
+.segmented.small span { min-height: 38px; font-size: 14px; }
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 0 0 14px; display: flex; flex-direction: column; gap: 10px; }
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 12px 12px 12px 50px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  line-height: 1.6;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute; left: 12px; top: 12px;
+  width: 26px; height: 26px; border-radius: 99px;
+  background: var(--accent); color: var(--accent-text);
+  font-weight: 700; font-size: 14px; line-height: 26px; text-align: center;
+}
+.steps small { display: block; color: var(--muted); line-height: 1.4; margin-top: 4px; }
+/* A picture of the iPhone edit menu, so people know what to look for. */
+.ios-menu {
+  display: inline-flex; vertical-align: middle; margin: 2px 0;
+  background: #2c2c2e; color: #fff; border-radius: 9px; overflow: hidden;
+  font-size: 14px; font-weight: 500; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+.ios-menu > span { padding: 5px 11px; display: inline-flex; align-items: center; gap: 5px; }
+.ios-menu > span + span { border-left: 1px solid #48484a; }
+.ios-scan { background: #0a84ff; }
+.ios-scan svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.key {
+  display: inline-block; padding: 0 8px; border-radius: 6px; line-height: 1.6;
+  background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 14px;
+}
+.card-box { margin-bottom: 8px; }
+.card-box textarea { min-height: 170px; font-size: 15px; line-height: 1.4; }
+.card-status { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; }
+.card-status.ok { background: var(--accent-soft); color: var(--accent); }
+.card-status.warn { background: var(--warn-bg); color: var(--warn-text); }
+#view-card .actions { margin-top: 0; margin-bottom: 10px; }
+#card-fill { margin-bottom: 10px; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn.attention { animation: attention 1.4s ease-in-out 3; }
+@keyframes attention {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(29, 92, 75, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(29, 92, 75, 0.25); }
+}
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
 [hidden] { display: none !important; }

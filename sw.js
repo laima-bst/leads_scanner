@@ -1,7 +1,7 @@
 // Offline support: serve the app shell from cache, refresh it in the background.
 // Bump VERSION whenever a cached file changes so phones pick up the new files.
 
-const VERSION = 'v0.2.1';
+const VERSION = 'v0.3.0';
 const CACHE = `lead-scanner-${VERSION}`;
 const SHELL = [
   './',
@@ -13,6 +13,7 @@ const SHELL = [
   'js/leads.js',
   'js/settings.js',
   'js/qr.js',
+  'js/cardtext.js',
   'vendor/jsQR.js',
   'manifest.webmanifest',
   'icons/icon.svg',

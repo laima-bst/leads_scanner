@@ -39,9 +39,10 @@
       </div>
 
       <div class="actions capture">
-        <a class="btn primary big" href="#scan">Scan QR</a>
-        <a class="btn big" href="#new">+ Type in</a>
+        <a class="btn primary big tile" href="#scan"><span class="tile-title">Scan QR</span><span class="tile-sub">badge or contact code</span></a>
+        <a class="btn primary big tile" href="#card"><span class="tile-title">Business card</span><span class="tile-sub">copy the card's text</span></a>
       </div>
+      <a class="btn full type-in" href="#new">+ Type in by hand</a>
 
       <div class="list-tools">
         <select id="list-event" aria-label="Show leads from event"></select>
@@ -65,6 +66,43 @@
         </label>
         <a class="btn ghost" href="#leads">Cancel</a>
       </div>
+    </section>
+
+    <!-- Business card: the phone's own text recognition copies the text, the app sorts it -->
+    <section id="view-card" class="view" hidden>
+      <div class="segmented small platform-switch" role="tablist" aria-label="Phone type">
+        <label><input type="radio" name="platform" value="ios"><span>iPhone</span></label>
+        <label><input type="radio" name="platform" value="android"><span>Android</span></label>
+      </div>
+
+      <ol class="steps" data-platform="ios">
+        <li>
+          <strong>Tap the box below</strong> and choose
+          <span class="ios-menu"><span>Paste</span><span class="ios-scan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M8 9.5h8M8 12h8M8 14.5h5"/></svg>Scan Text</span></span>
+          <small>No menu? Tap the box once more. Only arrows? Tap &rsaquo; to find it.</small>
+        </li>
+        <li><strong>Point the camera at the card.</strong> When the text is highlighted, tap <span class="key">Insert</span>.</li>
+        <li><strong>Tap Fill in the form.</strong></li>
+      </ol>
+
+      <ol class="steps" data-platform="android" hidden>
+        <li><strong>Open Google Lens</strong>: the Lens button in your camera, or in the Google app.</li>
+        <li><strong>Point at the card</strong> and tap <span class="key">Text</span>, then <span class="key">Select all</span> and <span class="key">Copy</span>.</li>
+        <li><strong>Come back here</strong> and tap <span class="key">Paste</span>, then <strong>Fill in the form</strong>.</li>
+      </ol>
+
+      <label class="field card-box">
+        <span class="visually-hidden">Text from the business card</span>
+        <textarea id="card-text" rows="8" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+      </label>
+      <p id="card-status" class="card-status" hidden></p>
+
+      <div class="actions">
+        <button type="button" class="btn" id="card-paste">Paste</button>
+        <button type="button" class="btn ghost" id="card-clear">Clear</button>
+      </div>
+      <button type="button" class="btn primary big" id="card-fill" disabled>Fill in the form</button>
+      <p class="muted small">The app sorts the text into company, name, position, email, phone and address, and you check everything before saving. No photo is stored.</p>
     </section>
 
     <!-- Lead form: every capture mode ends here for review -->
@@ -159,7 +197,7 @@
         </div>
 
         <details class="more" id="raw-qr-box" hidden>
-          <summary>QR code content</summary>
+          <summary id="raw-qr-title">QR code content</summary>
           <pre id="raw-qr" class="raw"></pre>
         </details>
 

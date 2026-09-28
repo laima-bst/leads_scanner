@@ -13,7 +13,7 @@ export const IMPORT_COLUMNS = [
 
 export const FULL_COLUMNS = [
   ...IMPORT_COLUMNS,
-  'event', 'captured_by', 'captured_at', 'capture_method', 'raw_qr',
+  'event', 'captured_by', 'captured_at', 'capture_method', 'raw_qr', 'card_text',
   'exported_at', 'updated_at', 'id',
 ];
 
@@ -57,6 +57,7 @@ function fullRow(lead) {
     captured_at: lead.captured_at || '',
     capture_method: lead.capture_method || '',
     raw_qr: lead.raw_qr || '',
+    card_text: lead.card_text || '',
     exported_at: lead.exported_at || '',
     updated_at: lead.updated_at || '',
     id: lead.id,

@@ -5,11 +5,12 @@ import {
   isFreemailDomain, isValidEmail, domainFromWebsite, domainFromEmail,
 } from './leads.js';
 import { parseQr, startScanner, decodeImageFile } from './qr.js';
+import { parseCardText } from './cardtext.js';
 import {
   loadSettings, saveSettings, newEventId, loadDraft, saveDraft, clearDraft,
 } from './settings.js';
 
-const APP_VERSION = '0.2.1';
+const APP_VERSION = '0.3.0';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -54,6 +55,7 @@ async function boot() {
 
   bindList();
   bindScan();
+  bindCard();
   bindForm();
   bindExport();
   bindSettings();
@@ -84,7 +86,7 @@ async function reloadLeads() {
 // ---------- routing ----------
 
 const TITLES = {
-  leads: 'Leads', scan: 'Scan QR', new: 'New lead', edit: 'Edit lead', export: 'Export', settings: 'Settings',
+  leads: 'Leads', scan: 'Scan QR', card: 'Business card', new: 'New lead', edit: 'Edit lead', export: 'Export', settings: 'Settings',
 };
 
 function route() {
@@ -101,13 +103,14 @@ function route() {
   } else formDirty = false;
 
   if (view === 'scan' && !openScanner()) return;
+  if (view === 'card' && !openCard()) return;
   if (view === 'leads') renderList();
   if (view === 'export') renderExport();
   if (view === 'settings') renderSettings();
 
   const section = view === 'new' || view === 'edit' ? 'form' : view;
   $$('.view').forEach((v) => { v.hidden = v.id !== `view-${section}`; });
-  $$('.tabbar a').forEach((a) => a.classList.toggle('active', a.dataset.tab === (section === 'form' ? 'leads' : view)));
+  $$('.tabbar a').forEach((a) => a.classList.toggle('active', a.dataset.tab === (section === 'form' || view === 'card' ? 'leads' : view)));
   $('#view-title').textContent = TITLES[view];
   renderEventLabel();
   window.scrollTo(0, 0);
@@ -194,8 +197,9 @@ function bindList() {
 
 // ---------- QR scanning ----------
 
-// Returns false when the scan view should not open.
-function openScanner() {
+// Before starting a scan or a card: an event must exist, and an unsaved lead
+// is only discarded after asking. Returns false when the view should not open.
+function readyToCapture() {
   if (!activeEvent()) {
     alert('Create an event in Settings first. Every lead is attributed to it.');
     go('settings');
@@ -203,12 +207,17 @@ function openScanner() {
   }
   const draft = loadDraft();
   if (draft && draft.isNew) {
-    if (!confirm('You have an unsaved lead. Discard it and scan a new one?')) {
+    if (!confirm('You have an unsaved lead. Discard it and capture a new one?')) {
       go('new');
       return false;
     }
     clearDraft();
   }
+  return true;
+}
+
+function openScanner() {
+  if (!readyToCapture()) return false;
   const status = $('#scan-status');
   status.textContent = 'Starting the camera…';
   status.classList.remove('error');
@@ -256,6 +265,94 @@ function bindScan() {
   });
 }
 
+// ---------- business card text ----------
+
+const isAndroid = /Android/i.test(navigator.userAgent);
+
+function setPlatform(platform) {
+  $$('input[name="platform"]').forEach((r) => { r.checked = r.value === platform; });
+  $$('#view-card .steps').forEach((ol) => { ol.hidden = ol.dataset.platform !== platform; });
+  $('#card-text').placeholder = platform === 'ios'
+    ? 'Tap here, then choose Scan Text'
+    : 'After copying the text in Google Lens, tap Paste below';
+  $('#card-paste').classList.toggle('primary', platform === 'android');
+}
+
+function openCard() {
+  if (!readyToCapture()) return false;
+  $('#card-text').value = '';
+  cardStatus('');
+  updateCardButtons();
+  return true;
+}
+
+function cardStatus(text, kind = '') {
+  const p = $('#card-status');
+  p.textContent = text;
+  p.className = `card-status ${kind}`;
+  p.hidden = !text;
+}
+
+function updateCardButtons() {
+  const has = $('#card-text').value.trim().length > 0;
+  $('#card-fill').disabled = !has;
+  $('#card-fill').classList.toggle('attention', has);
+  $('#card-paste').classList.remove('attention');
+}
+
+function fillFromCard() {
+  const text = $('#card-text').value.trim();
+  if (!text) return;
+  const { fields, hints } = parseCardText(text);
+  const lead = { ...newLeadForEvent(), ...fields, capture_method: 'card', card_text: text };
+  prefill = { lead, hints };
+  go('new');
+}
+
+function bindCard() {
+  // Guessed from the browser; the user can switch.
+  setPlatform(isAndroid ? 'android' : 'ios');
+  $$('input[name="platform"]').forEach((r) => r.addEventListener('change', () => setPlatform(r.value)));
+
+  const box = $('#card-text');
+  box.addEventListener('input', () => {
+    updateCardButtons();
+    if (box.value.trim()) cardStatus('Got the text. Tap Fill in the form.', 'ok');
+  });
+
+  $('#card-paste').addEventListener('click', async () => {
+    try {
+      const text = navigator.clipboard && navigator.clipboard.readText ? await navigator.clipboard.readText() : null;
+      if (text == null) throw new Error('unsupported');
+      if (!text.trim()) {
+        cardStatus('Nothing has been copied yet. Copy the card text first (see the steps above).', 'warn');
+        return;
+      }
+      box.value = text;
+      fillFromCard();
+    } catch {
+      cardStatus('This phone did not allow the Paste button. Touch and hold the box, then tap Paste.', 'warn');
+      box.focus();
+    }
+  });
+
+  $('#card-clear').addEventListener('click', () => {
+    box.value = '';
+    cardStatus('');
+    updateCardButtons();
+  });
+
+  $('#card-fill').addEventListener('click', fillFromCard);
+
+  // Coming back from Google Lens (Android): point at the Paste button.
+  document.addEventListener('visibilitychange', () => {
+    const android = ($('input[name="platform"]:checked') || {}).value === 'android';
+    if (document.visibilityState !== 'visible' || !android || $('#view-card').hidden || box.value.trim()) return;
+    $('#card-paste').classList.add('attention');
+    cardStatus('Welcome back. Tap Paste to add the copied text.', 'ok');
+  });
+}
+
 // ---------- form ----------
 
 function newLeadForEvent() {
@@ -281,7 +378,7 @@ function openForm(lead) {
     editing = prefill.lead;
     formHints = prefill.hints;
     prefill = null;
-    notice = 'QR code read. Check the fields, correct them if needed, then save.';
+    notice = `${editing.capture_method === 'card' ? 'Card text read' : 'QR code read'}. Check the fields, correct them if needed, then save.`;
   } else if (draft && draft.isNew) {
     editing = draft.data;
     formHints = draft.hints || [];
@@ -299,8 +396,10 @@ function openForm(lead) {
   $('#form-notice').textContent = notice;
   $('#form-hints').innerHTML = formHints.map((h) => `<li>${esc(h)}</li>`).join('');
   $('#form-delete').hidden = isNewLead;
-  $('#raw-qr-box').hidden = !editing.raw_qr;
-  $('#raw-qr').textContent = editing.raw_qr || '';
+  const raw = editing.raw_qr || editing.card_text || '';
+  $('#raw-qr-box').hidden = !raw;
+  $('#raw-qr-title').textContent = editing.raw_qr ? 'QR code content' : 'Text from the card';
+  $('#raw-qr').textContent = raw;
 
   const meta = [];
   if (!isNewLead) {
