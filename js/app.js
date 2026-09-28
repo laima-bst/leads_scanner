@@ -9,7 +9,7 @@ import {
   loadSettings, saveSettings, newEventId, loadDraft, saveDraft, clearDraft,
 } from './settings.js';
 
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.2.1';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];

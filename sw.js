@@ -1,7 +1,7 @@
 // Offline support: serve the app shell from cache, refresh it in the background.
 // Bump VERSION whenever a cached file changes so phones pick up the new files.
 
-const VERSION = 'v0.2.0';
+const VERSION = 'v0.2.1';
 const CACHE = `lead-scanner-${VERSION}`;
 const SHELL = [
   './',

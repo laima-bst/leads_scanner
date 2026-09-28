@@ -14,26 +14,8 @@
   --ok: #2e7d32;
   --radius: 12px;
   --tabbar-h: 60px;
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111615;
-    --surface: #1a2220;
-    --text: #e6ecea;
-    --muted: #9aa8a4;
-    --line: #2e3a37;
-    --accent: #5fb89c;
-    --accent-text: #0b1512;
-    --accent-soft: #1f3a32;
-    --warn-bg: #3a2f10;
-    --warn-text: #f3d68a;
-    --danger: #ef8a80;
-    --danger-soft: #3a1d1b;
-    --ok: #7cc47f;
-    color-scheme: dark;
-  }
+  /* Always light, even when the phone is in dark mode. */
+  color-scheme: only light;
 }
 
 * { box-sizing: border-box; }
